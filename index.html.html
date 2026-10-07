@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auction Result List Checker</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🔍 Auction Result List Checker</h1>
+    <p>Upload file Excel (.xlsx) untuk melakukan pengecekan otomatis</p>
+  </header>
+
+  <main>
+    <section class="upload-section">
+      <div id="dropZone" class="drop-zone">
+        <p>📂 Drag & Drop file Excel di sini atau</p>
+        <label for="fileInput" class="btn-upload">Pilih File</label>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+        <p class="hint">Format: .xlsx / .xls</p>
+      </div>
+
+      <div id="fileInfo" class="file-info hidden"></div>
+    </section>
+
+    <section id="summarySection" class="summary hidden">
+      <h2>📊 Ringkasan Hasil Pengecekan</h2>
+      <div class="summary-grid">
+        <div class="card card-total">
+          <span class="card-label">Total Unit</span>
+          <span class="card-value" id="totalUnits">0</span>
+        </div>
+        <div class="card card-warning">
+          <span class="card-label">⚠️ Tahun Tidak Sesuai</span>
+          <span class="card-value" id="totalYear">0</span>
+        </div>
+        <div class="card card-warning">
+          <span class="card-label">⚠️ Tipe/CC Tidak Sesuai</span>
+          <span class="card-value" id="totalType">0</span>
+        </div>
+        <div class="card card-warning">
+          <span class="card-label">⚠️ Nama STNK ≠ BPKB</span>
+          <span class="card-value" id="totalName">0</span>
+        </div>
+        <div class="card card-warning">
+          <span class="card-label">⚠️ Note 1 "AN PT" Missing</span>
+          <span class="card-value" id="totalNote">0</span>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <label>Filter:</label>
+        <select id="filterSelect">
+          <option value="all">Semua Unit</option>
+          <option value="year">Hanya Tahun Tidak Sesuai</option>
+          <option value="type">Hanya Tipe/CC Tidak Sesuai</option>
+          <option value="name">Hanya Nama STNK ≠ BPKB</option>
+          <option value="note">Hanya Note 1 Missing</option>
+          <option value="any">Hanya yang Ada Masalah</option>
+        </select>
+        <input type="text" id="searchInput" placeholder="🔍 Cari (Lot No, No Pol, Merk...)">
+        <button id="exportBtn" class="btn-export">⬇️ Export Hasil</button>
+      </div>
+    </section>
+
+    <section id="tableSection" class="table-section hidden">
+      <div class="table-wrapper">
+        <table id="resultTable">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Lot No</th>
+              <th>No Pol</th>
+              <th>Merk/Type</th>
+              <th>Tahun</th>
+              <th>CC</th>
+              <th>No Rangka</th>
+              <th>Nama BPKB</th>
+              <th>Nama STNK</th>
+              <th>Note 1</th>
+              <th>Status Cek</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 Auction Result Checker — Dibuat untuk mempermudah verifikasi data lelang</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
