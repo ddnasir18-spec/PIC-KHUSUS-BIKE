@@ -82,6 +82,43 @@
         .nopol-search-box .clear-nopol.show { display: flex; }
         .nopol-search-box .clear-nopol:hover { background: #2563eb; }
         .nopol-search-box .icon-nopol { font-size: 0.9rem; color: #3b82f6; }
+
+        /* PANEL PENGURUTAN BERTINGKAT */
+        .sort-panel {
+            display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 12px 20px;
+            background: #fffbeb; border-bottom: 1px solid #fcd34d; align-items: center;
+        }
+        .sort-panel .sort-title {
+            font-weight: 700; color: #78350f; font-size: 0.85rem;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .sort-panel .sort-stage {
+            display: flex; align-items: center; gap: 6px;
+            background: white; border: 1px solid #fcd34d;
+            border-radius: 30px; padding: 4px 10px 4px 14px;
+        }
+        .sort-panel .sort-stage .stage-num {
+            background: #f59e0b; color: white; font-size: 0.7rem;
+            width: 20px; height: 20px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .sort-panel .sort-stage select {
+            border: none; background: transparent; outline: none;
+            font-size: 0.8rem; font-weight: 600; color: #78350f;
+            min-width: 140px; cursor: pointer;
+        }
+        .sort-panel .btn-reset-sort {
+            background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
+            padding: 6px 14px; border-radius: 30px; font-size: 0.75rem;
+            font-weight: 600; cursor: pointer; transition: 0.15s;
+        }
+        .sort-panel .btn-reset-sort:hover { background: #fecaca; }
+        .sort-panel .sort-info {
+            font-size: 0.7rem; color: #92400e; font-style: italic;
+            margin-left: auto;
+        }
+
         .row-priority td {
             background: #fef9c3 !important;
             border-top: 2px solid #facc15 !important;
@@ -96,7 +133,7 @@
         }
         .table-scroll { overflow-x: auto; overflow-y: visible; max-height: none; }
         table {
-            width: 100%; border-collapse: collapse; font-size: 0.73rem; min-width: 1850px; /* Tambah lebar karena kolom baru */
+            width: 100%; border-collapse: collapse; font-size: 0.73rem; min-width: 1850px;
         }
         th {
             background: #f1f5f9; text-align: left; padding: 10px 8px;
@@ -177,11 +214,10 @@
         }
         .kosong-text { color: #94a3b8; font-style: italic; font-size: 0.6rem; }
         
-        /* Style untuk Checklist */
         .checklist-cell { text-align: center; }
         .checklist-cb {
             width: 18px; height: 18px; cursor: pointer;
-            accent-color: #10b981; /* Warna hijau saat dicentang */
+            accent-color: #10b981;
             transform: scale(1.2);
         }
         .row-checked td { background: #f0fdf4 !important; }
@@ -190,6 +226,8 @@
         @media (max-width: 768px) {
             .filter-bar { flex-direction: column; align-items: stretch; }
             .filter-bar label { flex-wrap: wrap; }
+            .sort-panel { flex-direction: column; align-items: stretch; }
+            .sort-panel .sort-stage { width: 100%; }
             .upload-card { padding: 16px; }
             .stats span { font-size: 0.75rem; padding: 4px 12px; }
         }
@@ -270,7 +308,6 @@
                         <option value="unknown">❓ Tidak terdeteksi</option>
                     </select>
                 </label>
-                <!-- FILTER BARU UNTUK CHECKLIST -->
                 <label>✅ Status Cek:
                     <select id="checkFilter">
                         <option value="all">Semua</option>
@@ -278,13 +315,102 @@
                         <option value="unchecked">⬜ Belum Dicek</option>
                     </select>
                 </label>
-                <span style="font-size:0.7rem;color:#94a3b8;margin-left:auto;">Klik header = urutkan (yang bermasalah di atas)</span>
             </div>
+
+            <!-- ============================================================ -->
+            <!-- PANEL PENGURUTAN BERTINGKAT (4 TAHAP) -->
+            <!-- ============================================================ -->
+            <div class="sort-panel">
+                <span class="sort-title">🔢 Urutkan Bertingkat:</span>
+                
+                <div class="sort-stage">
+                    <span class="stage-num">1</span>
+                    <select id="sortStage1" class="sort-stage-select" data-stage="1">
+                        <option value="">— Tidak dipakai —</option>
+                        <option value="checked">Status Cek (Belum → Sudah)</option>
+                        <option value="anomali">Status Anomali (Anomali → OK)</option>
+                        <option value="ccInfo">CC Bermasalah</option>
+                        <option value="tipeSama">Tipe Bermasalah</option>
+                        <option value="tahunRangka">Tahun Rangka Bermasalah</option>
+                        <option value="transmisi">Transmisi Bermasalah</option>
+                        <option value="namaSama">Nama STNK vs BPKB</option>
+                        <option value="anPT">AN PT</option>
+                        <option value="region">Region</option>
+                        <option value="lot">LOT</option>
+                        <option value="nopol">No. Polisi</option>
+                        <option value="merk">Merk</option>
+                        <option value="tahun">Tahun</option>
+                    </select>
+                </div>
+
+                <div class="sort-stage">
+                    <span class="stage-num">2</span>
+                    <select id="sortStage2" class="sort-stage-select" data-stage="2">
+                        <option value="">— Tidak dipakai —</option>
+                        <option value="checked">Status Cek (Belum → Sudah)</option>
+                        <option value="anomali">Status Anomali (Anomali → OK)</option>
+                        <option value="ccInfo">CC Bermasalah</option>
+                        <option value="tipeSama">Tipe Bermasalah</option>
+                        <option value="tahunRangka">Tahun Rangka Bermasalah</option>
+                        <option value="transmisi">Transmisi Bermasalah</option>
+                        <option value="namaSama">Nama STNK vs BPKB</option>
+                        <option value="anPT">AN PT</option>
+                        <option value="region">Region</option>
+                        <option value="lot">LOT</option>
+                        <option value="nopol">No. Polisi</option>
+                        <option value="merk">Merk</option>
+                        <option value="tahun">Tahun</option>
+                    </select>
+                </div>
+
+                <div class="sort-stage">
+                    <span class="stage-num">3</span>
+                    <select id="sortStage3" class="sort-stage-select" data-stage="3">
+                        <option value="">— Tidak dipakai —</option>
+                        <option value="checked">Status Cek (Belum → Sudah)</option>
+                        <option value="anomali">Status Anomali (Anomali → OK)</option>
+                        <option value="ccInfo">CC Bermasalah</option>
+                        <option value="tipeSama">Tipe Bermasalah</option>
+                        <option value="tahunRangka">Tahun Rangka Bermasalah</option>
+                        <option value="transmisi">Transmisi Bermasalah</option>
+                        <option value="namaSama">Nama STNK vs BPKB</option>
+                        <option value="anPT">AN PT</option>
+                        <option value="region">Region</option>
+                        <option value="lot">LOT</option>
+                        <option value="nopol">No. Polisi</option>
+                        <option value="merk">Merk</option>
+                        <option value="tahun">Tahun</option>
+                    </select>
+                </div>
+
+                <div class="sort-stage">
+                    <span class="stage-num">4</span>
+                    <select id="sortStage4" class="sort-stage-select" data-stage="4">
+                        <option value="">— Tidak dipakai —</option>
+                        <option value="checked">Status Cek (Belum → Sudah)</option>
+                        <option value="anomali">Status Anomali (Anomali → OK)</option>
+                        <option value="ccInfo">CC Bermasalah</option>
+                        <option value="tipeSama">Tipe Bermasalah</option>
+                        <option value="tahunRangka">Tahun Rangka Bermasalah</option>
+                        <option value="transmisi">Transmisi Bermasalah</option>
+                        <option value="namaSama">Nama STNK vs BPKB</option>
+                        <option value="anPT">AN PT</option>
+                        <option value="region">Region</option>
+                        <option value="lot">LOT</option>
+                        <option value="nopol">No. Polisi</option>
+                        <option value="merk">Merk</option>
+                        <option value="tahun">Tahun</option>
+                    </select>
+                </div>
+
+                <button class="btn-reset-sort" id="btnResetSort">🔄 Reset Urutan</button>
+                <span class="sort-info">Tahap 1 = prioritas utama. Klik header tabel untuk urut 1 kolom saja.</span>
+            </div>
+
             <div class="table-scroll" id="tableScroll">
                 <table>
                     <thead id="tableHead">
                         <tr>
-                            <!-- KOLOM CHECKLIST BARU -->
                             <th data-sort="checked" style="width: 40px; text-align:center;">✅ Cek <span class="sort-indicator">↕</span></th>
                             <th data-sort="lot">LOT <span class="sort-indicator">↕</span></th>
                             <th data-sort="nopol">No. Polisi <span class="sort-indicator">↕</span></th>
@@ -344,22 +470,26 @@
         const fuelFilter = document.getElementById('fuelFilter');
         const transFilter = document.getElementById('transFilter');
         const tahunFilter = document.getElementById('tahunFilter');
-        const checkFilter = document.getElementById('checkFilter'); // Filter baru
+        const checkFilter = document.getElementById('checkFilter');
         const tableBody = document.getElementById('tableBody');
         const tableHead = document.getElementById('tableHead');
         const totalRows = document.getElementById('totalRows');
         const anomaliCount = document.getElementById('anomaliCount');
         const transBedaCount = document.getElementById('transBedaCount');
         const asiaCount = document.getElementById('asiaCount');
-        const checkedCount = document.getElementById('checkedCount'); // Statistik baru
+        const checkedCount = document.getElementById('checkedCount');
         const prevPageBtn = document.getElementById('prevPage');
         const nextPageBtn = document.getElementById('nextPage');
         const pageInfo = document.getElementById('pageInfo');
         const nopolSearchInput = document.getElementById('nopolSearchInput');
         const clearNopolBtn = document.getElementById('clearNopolBtn');
+        const btnResetSort = document.getElementById('btnResetSort');
 
-        let sortKey = 'lot';
+        let sortKey = 'lot'; // untuk sort 1 kolom via header
         let activeNopolQuery = '';
+
+        // Array kriteria pengurutan bertingkat
+        let multiSortStages = ['', '', '', ''];
 
         // ============================================================
         // 2. LOCAL STORAGE UNTUK CHECKLIST
@@ -396,7 +526,6 @@
 
         function updateCheckedStats() {
             const list = getCheckedList();
-            // Hitung hanya yang ada di data saat ini
             const count = allData.filter(d => list[d.nopol]).length;
             checkedCount.textContent = count;
         }
@@ -543,40 +672,29 @@
         }
 
         // ============================================================
-        // 7. CEK TIPE — MURNI: Model Dokumen vs Model Fisik
+        // 7. CEK TIPE
         // ============================================================
         function isTipeSamaMurni(modelDok, modelFisik) {
             if (!modelDok || !modelFisik) return false;
-
             const dok = modelDok.toUpperCase();
             const fisik = modelFisik.toUpperCase();
-
             const varianRegex = /\b\d+[.,]\d+\s+([A-Z])\b/;
             const varianDok = (dok.match(varianRegex) || [])[1];
             const varianFisik = (fisik.match(varianRegex) || [])[1];
-            if (varianDok && varianFisik && varianDok !== varianFisik) {
-                return false;
-            }
-
+            if (varianDok && varianFisik && varianDok !== varianFisik) return false;
             const dokClean = dok.replace(/\s/g, '');
             const fisikClean = fisik.replace(/\s/g, '');
             if (!dokClean || !fisikClean) return false;
-
             let dokChars = dokClean.split('').filter(c => c.match(/[A-Z0-9]/));
             let fisikChars = fisikClean.split('').filter(c => c.match(/[A-Z0-9]/));
             if (fisikChars.length === 0) return false;
-
             let matchCount = 0;
             let dokCopy = [...dokChars];
             for (let char of fisikChars) {
                 const idx = dokCopy.indexOf(char);
-                if (idx !== -1) {
-                    matchCount++;
-                    dokCopy.splice(idx, 1);
-                }
+                if (idx !== -1) { matchCount++; dokCopy.splice(idx, 1); }
             }
-            const rasio = matchCount / fisikChars.length;
-            return rasio >= 0.60;
+            return (matchCount / fisikChars.length) >= 0.60;
         }
 
         // ============================================================
@@ -599,9 +717,6 @@
             const region = getRegion(merk);
             const isAsia = region === 'asia';
 
-            // ============================================================
-            // CEK TAHUN RANGKA
-            // ============================================================
             let tahunRangka = null, kodeTahunVIN = null, statusVIN = 'unknown', mappingVIN = null;
             if (isAsia) {
                 const vinResult = parseYearFromVIN(noRangka, tahun);
@@ -613,25 +728,17 @@
 
             let tahunValid = true, tahunMismatch = false;
             if (isAsia && tahun && tahunRangka) {
-                if (Math.abs(tahun - tahunRangka) > 2) {
-                    tahunValid = false; tahunMismatch = true;
-                }
+                if (Math.abs(tahun - tahunRangka) > 2) { tahunValid = false; tahunMismatch = true; }
             }
 
-            // ============================================================
-            // CEK CC — Excel vs Model Fisik
-            // ============================================================
             const ccExcelRaw = row['CC'];
             let ccExcel = null;
             if (ccExcelRaw !== undefined && ccExcelRaw !== null && ccExcelRaw !== '') {
                 const parsed = parseInt(ccExcelRaw);
-                if (!isNaN(parsed) && parsed >= 0) {
-                    ccExcel = parsed;
-                }
+                if (!isNaN(parsed) && parsed >= 0) ccExcel = parsed;
             }
 
             const ccFisik = extractCC(modelFisik);
-
             let ccStatus = 'unknown';
             let ccSelisih = null;
             let ccDisplay = '—';
@@ -641,9 +748,7 @@
                 ccSelisih = Math.abs(ccExcel - ccFisik);
                 if (ccExcel === 0 || ccFisik === 0) {
                     ccStatus = 'partial';
-                    ccDisplay = ccExcel === 0
-                        ? `0 vs ${ccFisik}cc`
-                        : `${ccFisik} vs 0cc`;
+                    ccDisplay = ccExcel === 0 ? `0 vs ${ccFisik}cc` : `${ccFisik} vs 0cc`;
                     ccSumber = 'Ada nilai 0';
                 } else if (ccSelisih <= 100) {
                     ccStatus = 'sama';
@@ -655,23 +760,13 @@
                     ccSumber = 'Excel vs Fisik';
                 }
             } else if (ccFisik !== null) {
-                ccStatus = 'partial';
-                ccDisplay = `${ccFisik}cc`;
-                ccSumber = 'Hanya Fisik';
+                ccStatus = 'partial'; ccDisplay = `${ccFisik}cc`; ccSumber = 'Hanya Fisik';
             } else if (ccExcel !== null) {
-                ccStatus = 'partial';
-                ccDisplay = `${ccExcel}cc`;
-                ccSumber = 'Hanya Excel';
+                ccStatus = 'partial'; ccDisplay = `${ccExcel}cc`; ccSumber = 'Hanya Excel';
             }
 
-            // ============================================================
-            // CEK TIPE — MURNI
-            // ============================================================
             const tipeSama = isTipeSamaMurni(modelDok, modelFisik);
 
-            // ============================================================
-            // CEK NAMA STNK vs BPKB
-            // ============================================================
             let namaSama = true, namaKosong = false;
             if (!namaSTNK && !namaBPKB) { namaKosong = true; namaSama = true; }
             else if (namaSTNK && namaBPKB) { namaSama = namaSTNK.toLowerCase() === namaBPKB.toLowerCase(); }
@@ -685,36 +780,16 @@
             const transSama = transResult.status === 'sama';
             const transDetail = transResult.detail;
 
-            // ============================================================
-            // HITUNG ANOMALI
-            // ============================================================
             let anomali = false, reasons = [];
-            if (isAsia && tahunMismatch) {
-                anomali = true;
-                reasons.push(`Tahun mismatch (${tahun} vs ${tahunRangka})`);
-            }
-            if (!tipeSama && modelDok && modelFisik) {
-                anomali = true;
-                reasons.push('Tipe berbeda');
-            }
-            if (ccStatus === 'beda') {
-                anomali = true;
-                reasons.push(`CC beda (Excel ${ccExcel}cc vs Fisik ${ccFisik}cc)`);
-            }
-            if (!namaSama && namaSTNK && namaBPKB) {
-                anomali = true;
-                reasons.push('Nama STNK ≠ BPKB');
-            }
+            if (isAsia && tahunMismatch) { anomali = true; reasons.push(`Tahun mismatch (${tahun} vs ${tahunRangka})`); }
+            if (!tipeSama && modelDok && modelFisik) { anomali = true; reasons.push('Tipe berbeda'); }
+            if (ccStatus === 'beda') { anomali = true; reasons.push(`CC beda (Excel ${ccExcel}cc vs Fisik ${ccFisik}cc)`); }
+            if (!namaSama && namaSTNK && namaBPKB) { anomali = true; reasons.push('Nama STNK ≠ BPKB'); }
             if (note1.toUpperCase().includes('AN PT') && !namaSTNK.toUpperCase().startsWith('PT') && !namaBPKB.toUpperCase().startsWith('PT')) {
-                anomali = true;
-                reasons.push('Note "AN PT" tapi nama bukan PT');
+                anomali = true; reasons.push('Note "AN PT" tapi nama bukan PT');
             }
-            if (!transSama && transResult.status !== 'unknown') {
-                anomali = true;
-                reasons.push(`Transmisi: ${transDetail}`);
-            }
+            if (!transSama && transResult.status !== 'unknown') { anomali = true; reasons.push(`Transmisi: ${transDetail}`); }
 
-            // Kategori BBM untuk filter
             let fuelKategori = 'unknown';
             if (fuelTypeExcel) {
                 const lower = fuelTypeExcel.toLowerCase();
@@ -749,12 +824,9 @@
             for (let r of rows) {
                 if (!r || r.length === 0) continue;
                 const rowObj = {};
-                for (let i = 0; i < headers.length; i++) {
-                    rowObj[headers[i]] = r[i];
-                }
+                for (let i = 0; i < headers.length; i++) rowObj[headers[i]] = r[i];
                 if (!rowObj['MERK'] && !rowObj['NO.RANGKA'] && !rowObj['NO POL'] && !rowObj['LOT']) continue;
-                const analyzed = analyzeRow(rowObj);
-                parsedData.push(analyzed);
+                parsedData.push(analyzeRow(rowObj));
             }
             allData = parsedData;
             updateStats();
@@ -767,11 +839,11 @@
             anomaliCount.textContent = allData.filter(d => d.anomali).length;
             transBedaCount.textContent = allData.filter(d => d.transResult.status === 'beda').length;
             asiaCount.textContent = allData.filter(d => d.isAsia).length;
-            updateCheckedStats(); // Update jumlah sudah dicek
+            updateCheckedStats();
         }
 
         // ============================================================
-        // 10. FILTER & SORTING
+        // 10. FILTER
         // ============================================================
         function applyFilters() {
             const q = searchInput.value.toLowerCase().trim();
@@ -780,15 +852,13 @@
             const fuel = fuelFilter.value;
             const trans = transFilter.value;
             const tahun = tahunFilter.value;
-            const check = checkFilter.value; // Filter checklist
+            const check = checkFilter.value;
             const nopolQ = activeNopolQuery;
             const checkedList = getCheckedList();
 
             filteredData = allData.filter(d => {
-                // Filter Checklist
                 if (check === 'checked' && !checkedList[d.nopol]) return false;
                 if (check === 'unchecked' && checkedList[d.nopol]) return false;
-
                 if (q) {
                     const hay = `${d.merk} ${d.modelDok} ${d.modelFisik} ${d.namaSTNK} ${d.namaBPKB} ${d.nopol} ${d.noRangka} ${d.note1} ${d.lot} ${d.fuelExcel}`.toLowerCase();
                     if (!hay.includes(q)) return false;
@@ -815,6 +885,7 @@
 
             sortData();
 
+            // Kalau ada nopolQ, taruh exact match di atas
             if (nopolQ) {
                 const queryNorm = nopolQ.toUpperCase().replace(/\s/g, '');
                 filteredData.sort((a, b) => {
@@ -838,22 +909,23 @@
         }
 
         // ============================================================
-        // SEVERITY SCORE (Termasuk Checklist)
+        // SEVERITY SCORE
         // ============================================================
         function getSeverityScore(item, key) {
             switch (key) {
-                case 'checked':
-                    // Belum dicek dianggap "lebih penting" (skor lebih tinggi) agar muncul di atas
+                case 'checked': {
                     const checkedList = getCheckedList();
-                    return checkedList[item.nopol] ? 0 : 1;
+                    return checkedList[item.nopol] ? 0 : 1; // 1 = belum dicek (prioritas atas)
+                }
+                case 'anomali':
+                    return item.anomali ? 1 : 0;
                 case 'ccInfo':
                     if (item.ccStatus === 'beda') return 3;
                     if (item.ccStatus === 'partial') return 2;
                     if (item.ccStatus === 'sama') return 1;
                     return 0;
                 case 'tipeSama':
-                    if (!item.tipeSama) return 2;
-                    return 1;
+                    return item.tipeSama ? 1 : 2;
                 case 'tahunRangka':
                     if (item.tahunMismatch) return 3;
                     if (item.tahunValid && item.isAsia) return 2;
@@ -880,12 +952,30 @@
         }
 
         function isSeverityColumn(key) {
-            return ['checked', 'ccInfo', 'tipeSama', 'tahunRangka', 'transmisi', 'namaSama', 'anPT', 'region'].includes(key);
+            return ['checked', 'anomali', 'ccInfo', 'tipeSama', 'tahunRangka', 'transmisi', 'namaSama', 'anPT', 'region'].includes(key);
         }
 
+        // ============================================================
+        // MULTI-LEVEL SORTING
+        // ============================================================
         function sortData() {
-            const key = sortKey;
+            // Cek apakah ada kriteria multi-sort yang aktif
+            const activeStages = multiSortStages.filter(s => s !== '');
 
+            if (activeStages.length > 0) {
+                filteredData.sort((a, b) => {
+                    for (const stageKey of activeStages) {
+                        const cmp = compareItems(a, b, stageKey);
+                        if (cmp !== 0) return cmp;
+                    }
+                    // Tie-breaker akhir: LOT
+                    return (a.lot || '').localeCompare(b.lot || '', undefined, { numeric: true });
+                });
+                return;
+            }
+
+            // Kalau tidak ada multi-sort, pakai sort 1 kolom via header
+            const key = sortKey;
             if (isSeverityColumn(key)) {
                 filteredData.sort((a, b) => {
                     const sevA = getSeverityScore(a, key);
@@ -911,14 +1001,39 @@
                     case 'note1': va = a.note1 || ''; vb = b.note1 || ''; break;
                     default: va = a.lot || ''; vb = b.lot || '';
                 }
-                if (typeof va === 'number' && typeof vb === 'number') {
-                    return va - vb;
-                }
+                if (typeof va === 'number' && typeof vb === 'number') return va - vb;
                 const sa = String(va).toLowerCase(), sb = String(vb).toLowerCase();
                 if (sa < sb) return -1;
                 if (sa > sb) return 1;
                 return 0;
             });
+        }
+
+        // Fungsi compare untuk 1 kriteria
+        function compareItems(a, b, key) {
+            // Kolom severity (skor tinggi = prioritas atas)
+            if (isSeverityColumn(key)) {
+                const sevA = getSeverityScore(a, key);
+                const sevB = getSeverityScore(b, key);
+                if (sevA !== sevB) return sevB - sevA; // descending severity
+                return 0;
+            }
+            // Kolom teks / angka biasa (ascending)
+            let va, vb;
+            switch (key) {
+                case 'lot': va = a.lot || ''; vb = b.lot || ''; break;
+                case 'nopol': va = a.nopol || ''; vb = b.nopol || ''; break;
+                case 'merk': va = a.merk || ''; vb = b.merk || ''; break;
+                case 'tahun': va = a.tahun || 0; vb = b.tahun || 0; break;
+                case 'modelDok': va = a.modelDok || ''; vb = b.modelDok || ''; break;
+                case 'modelFisik': va = a.modelFisik || ''; vb = b.modelFisik || ''; break;
+                default: va = a.lot || ''; vb = b.lot || '';
+            }
+            if (typeof va === 'number' && typeof vb === 'number') return va - vb;
+            const sa = String(va).toLowerCase(), sb = String(vb).toLowerCase();
+            if (sa < sb) return -1;
+            if (sa > sb) return 1;
+            return 0;
         }
 
         // ============================================================
@@ -950,17 +1065,11 @@
                 const d = pageData[i];
                 const isChecked = !!checkedList[d.nopol];
                 let rowClass = '';
-                
-                // Prioritas: Kalau sedang search nopol, highlight kuning
                 if (nopolQNorm) {
                     const nopolNorm = d.nopol.toUpperCase().replace(/\s/g, '');
                     if (nopolNorm.includes(nopolQNorm)) rowClass = 'row-priority';
-                } 
-                
-                // Kalau sudah dicek, highlight hijau (kecuali sedang di-highlight kuning)
-                if (isChecked && !rowClass) {
-                    rowClass = 'row-checked';
                 }
+                if (isChecked && !rowClass) rowClass = 'row-checked';
 
                 const nopolDisplay = d.nopol ? `<span class="nopol-cell">${escapeHtml(d.nopol)}</span>` : '<span class="kosong-text">-</span>';
 
@@ -976,7 +1085,6 @@
                     ? '<span class="badge badge-success">✅ Sama</span>'
                     : '<span class="badge badge-danger">❌ Beda</span>';
 
-                // ---- Badge CC ----
                 let ccHtml;
                 if (d.ccStatus === 'sama') {
                     const selisihInfo = d.ccSelisih > 0 ? ` (Δ${d.ccSelisih})` : '';
@@ -989,7 +1097,6 @@
                     ccHtml = '<span class="badge badge-unknown">—</span>';
                 }
 
-                // ---- Badge BBM ----
                 let fuelHtml;
                 if (!d.fuelExcel) {
                     fuelHtml = '<span class="badge badge-unknown">—</span>';
@@ -1037,7 +1144,6 @@
                         ? '<span class="badge badge-europe">🌍 Eropa</span>'
                         : '<span class="badge badge-unknown">❓ Other</span>';
 
-                // CHECKBOX CHECKLIST
                 const checkboxHtml = `<input type="checkbox" class="checklist-cb" data-nopol="${escapeHtml(d.nopol)}" ${isChecked ? 'checked' : ''}>`;
 
                 html += `<tr class="${rowClass}">
@@ -1067,10 +1173,12 @@
             prevPageBtn.disabled = currentPage <= 1;
             nextPageBtn.disabled = currentPage >= totalPages;
 
+            // Update indikator header (hanya untuk sort 1 kolom, bukan multi)
+            const hasMultiSort = multiSortStages.some(s => s !== '');
             document.querySelectorAll('th[data-sort]').forEach(th => {
                 const indicator = th.querySelector('.sort-indicator');
                 th.classList.remove('sort-active', 'sort-severity');
-                if (th.dataset.sort === sortKey) {
+                if (!hasMultiSort && th.dataset.sort === sortKey) {
                     if (isSeverityColumn(sortKey)) {
                         th.classList.add('sort-severity');
                         if (indicator) indicator.textContent = '⚠️';
@@ -1094,38 +1202,50 @@
         // ============================================================
         // 12. EVENT LISTENERS
         // ============================================================
-        
-        // Event delegation untuk checkbox yang dinamis
         tableBody.addEventListener('change', function(e) {
             if (e.target.classList.contains('checklist-cb')) {
                 const nopol = e.target.dataset.nopol;
                 const isChecked = e.target.checked;
                 toggleCheck(nopol, isChecked);
-                
-                // Update visual baris (langsung tanpa render ulang seluruh tabel)
                 const tr = e.target.closest('tr');
                 if (isChecked) {
                     tr.classList.add('row-checked');
-                    // Hapus row-priority jika ada, karena sudah dicek
-                    tr.classList.remove('row-priority'); 
+                    tr.classList.remove('row-priority');
                 } else {
                     tr.classList.remove('row-checked');
                 }
-
-                // Update statistik
                 updateCheckedStats();
-
-                // Jika filter "Status Cek" sedang aktif, kita perlu render ulang
-                if (checkFilter.value !== 'all') {
+                // Kalau multi-sort pakai 'checked' atau filter 'check' aktif, render ulang
+                if (checkFilter.value !== 'all' || multiSortStages.includes('checked')) {
                     applyFilters();
                 }
             }
         });
 
+        // Klik header tabel = sort 1 kolom (reset multi-sort)
         tableHead.addEventListener('click', function(e) {
             const th = e.target.closest('th[data-sort]');
             if (!th) return;
             sortKey = th.dataset.sort;
+            // Reset multi-sort supaya user tahu ini mode 1 kolom
+            multiSortStages = ['', '', '', ''];
+            document.querySelectorAll('.sort-stage-select').forEach(sel => sel.value = '');
+            applyFilters();
+        });
+
+        // Event listener untuk dropdown multi-sort
+        document.querySelectorAll('.sort-stage-select').forEach(sel => {
+            sel.addEventListener('change', function() {
+                const stage = parseInt(this.dataset.stage) - 1; // 0-3
+                multiSortStages[stage] = this.value;
+                applyFilters();
+            });
+        });
+
+        // Reset multi-sort
+        btnResetSort.addEventListener('click', function() {
+            multiSortStages = ['', '', '', ''];
+            document.querySelectorAll('.sort-stage-select').forEach(sel => sel.value = '');
             applyFilters();
         });
 
@@ -1135,15 +1255,12 @@
         fuelFilter.addEventListener('change', applyFilters);
         transFilter.addEventListener('change', applyFilters);
         tahunFilter.addEventListener('change', applyFilters);
-        checkFilter.addEventListener('change', applyFilters); // Event listener filter baru
+        checkFilter.addEventListener('change', applyFilters);
 
         nopolSearchInput.addEventListener('input', function() {
             activeNopolQuery = this.value.trim();
-            if (activeNopolQuery) {
-                clearNopolBtn.classList.add('show');
-            } else {
-                clearNopolBtn.classList.remove('show');
-            }
+            if (activeNopolQuery) clearNopolBtn.classList.add('show');
+            else clearNopolBtn.classList.remove('show');
             applyFilters();
         });
         clearNopolBtn.addEventListener('click', function() {
@@ -1208,7 +1325,6 @@
             debugInfo.classList.add('show');
         }
 
-        // Render awal
         renderTable();
     </script>
 </body>
