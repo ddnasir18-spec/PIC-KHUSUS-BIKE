@@ -106,7 +106,7 @@
         .sort-panel .sort-stage select {
             border: none; background: transparent; outline: none;
             font-size: 0.8rem; font-weight: 600; color: #78350f;
-            min-width: 140px; cursor: pointer;
+            min-width: 150px; cursor: pointer;
         }
         .sort-panel .btn-reset-sort {
             background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
@@ -237,7 +237,7 @@
     <div class="container">
         <h1>📊 Analisis Data Lelang</h1>
         <div class="subtitle">
-            <b>CC</b>: Kolom CC Excel vs CC Model Fisik · <b>Tipe</b>: Model Dokumen vs Model Fisik · <b>BBM</b>: Nilai dari kolom FUEL TYPE (info saja) · Tahun Rangka (VIN) · Nama STNK vs BPKB · Status PT · Transmisi
+            <b>CC</b>: Kolom CC Excel vs CC Model Fisik (toleransi 50 cc) · <b>Tipe</b>: Model Dokumen vs Model Fisik (token-based) · <b>BBM</b>: Nilai dari kolom FUEL TYPE · Tahun Rangka (VIN) · Nama STNK vs BPKB · Status PT · Transmisi
             <span class="filter-info">🌏 Hanya merk Asia (Jepang, China, Korea)</span>
             <span class="filter-info" style="background:#dcfce7; color:#166534; margin-left:8px;">✅ Checklist tersimpan otomatis di browser</span>
         </div>
@@ -317,9 +317,7 @@
                 </label>
             </div>
 
-            <!-- ============================================================ -->
             <!-- PANEL PENGURUTAN BERTINGKAT (4 TAHAP) -->
-            <!-- ============================================================ -->
             <div class="sort-panel">
                 <span class="sort-title">🔢 Urutkan Bertingkat:</span>
                 
@@ -458,6 +456,7 @@
         let currentPage = 1;
         const pageSize = 25;
         const STORAGE_KEY = 'lelang_checked_nopol';
+        const CC_TOLERANCE = 50; // Toleransi selisih CC (dalam cc)
 
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
@@ -485,10 +484,8 @@
         const clearNopolBtn = document.getElementById('clearNopolBtn');
         const btnResetSort = document.getElementById('btnResetSort');
 
-        let sortKey = 'lot'; // untuk sort 1 kolom via header
+        let sortKey = 'lot';
         let activeNopolQuery = '';
-
-        // Array kriteria pengurutan bertingkat
         let multiSortStages = ['', '', '', ''];
 
         // ============================================================
@@ -515,11 +512,8 @@
         function toggleCheck(nopol, isChecked) {
             if (!nopol) return;
             const list = getCheckedList();
-            if (isChecked) {
-                list[nopol] = true;
-            } else {
-                delete list[nopol];
-            }
+            if (isChecked) list[nopol] = true;
+            else delete list[nopol];
             saveCheckedList(list);
             updateCheckedStats();
         }
@@ -598,7 +592,6 @@
             for (let b of EUROPE_BRANDS) { if (upperMerk.includes(b) || b.includes(upperMerk)) return 'europe'; }
             return 'other';
         }
-        function isAsiaBrand(merk) { return getRegion(merk) === 'asia'; }
 
         // ============================================================
         // 5. PARSING TRANSMISI
@@ -642,59 +635,98 @@
 
         // ============================================================
         // 6. EKSTRAK CC DARI TEKS
+        // Strategi:
+        // - Cek eksplisit "2494 CC" → pakai langsung
+        // - Cek liter "2.4" → konversi liter × 1000 (2400)
+        // - Fallback: angka 3-4 digit
         // ============================================================
         function extractCC(text) {
             if (!text) return null;
             const upper = String(text).toUpperCase().replace(',', '.');
-            const ccExplicitRegex = /(\d{3,5})\s*CC\b/;
-            const ccExplicitMatch = upper.match(ccExplicitRegex);
+            
+            // 1. Cek eksplisit "2494 CC" — paling akurat
+            const ccExplicitMatch = upper.match(/(\d{3,5})\s*CC\b/);
             if (ccExplicitMatch) {
                 const val = parseInt(ccExplicitMatch[1]);
                 if (val >= 600 && val <= 9999) return val;
             }
-            const literRegex = /(?<![.\d])(\d)\.(\d)(?![.\d])/;
-            const literMatch = upper.match(literRegex);
+            
+            // 2. Cek liter "2.4" → konversi × 1000
+            const literMatch = upper.match(/(?<![.\d])(\d\.\d)(?![.\d])/);
             if (literMatch) {
-                const liter = parseFloat(`${literMatch[1]}.${literMatch[2]}`);
+                const liter = parseFloat(literMatch[1]);
                 if (liter >= 0.6 && liter <= 9.9) {
                     return Math.round(liter * 1000);
                 }
             }
+            
+            // 3. Fallback: angka 3-4 digit
             const ribuanRegex = /(?<!\d)(\d{3,4})(?!\d)/g;
             let match;
             while ((match = ribuanRegex.exec(upper)) !== null) {
                 const val = parseInt(match[1]);
-                if (val >= 600 && val <= 9999) {
-                    return val;
-                }
+                if (val >= 600 && val <= 9999) return val;
+            }
+            return null;
+        }
+
+        // Ekstrak liter dari teks (untuk cek konsistensi CC vs liter)
+        function extractLiter(text) {
+            if (!text) return null;
+            const upper = String(text).toUpperCase().replace(',', '.');
+            const literMatch = upper.match(/(?<![.\d])(\d\.\d)(?![.\d])/);
+            if (literMatch) {
+                const liter = parseFloat(literMatch[1]);
+                if (liter >= 0.6 && liter <= 9.9) return liter;
             }
             return null;
         }
 
         // ============================================================
-        // 7. CEK TIPE
+        // 7. CEK TIPE — Token-based + liter + varian
         // ============================================================
         function isTipeSamaMurni(modelDok, modelFisik) {
             if (!modelDok || !modelFisik) return false;
-            const dok = modelDok.toUpperCase();
-            const fisik = modelFisik.toUpperCase();
+            
+            const normalize = (s) => s.toUpperCase()
+                .replace(/[^A-Z0-9.\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            
+            const dok = normalize(modelDok);
+            const fisik = normalize(modelFisik);
+            if (!dok || !fisik) return false;
+            
+            // 1. Bandingkan angka liter
+            const literRegex = /(?<![.\d])(\d\.\d)(?![.\d])/g;
+            const literDok = (dok.match(literRegex) || []).map(Number);
+            const literFisik = (fisik.match(literRegex) || []).map(Number);
+            if (literDok.length > 0 && literFisik.length > 0) {
+                const adaMatch = literDok.some(l => literFisik.some(f => Math.abs(l - f) < 0.15));
+                if (!adaMatch) return false; // 2.4 vs 2.5 → beda
+            }
+            
+            // 2. Bandingkan varian (huruf setelah liter, mis. "2.4 G")
             const varianRegex = /\b\d+[.,]\d+\s+([A-Z])\b/;
             const varianDok = (dok.match(varianRegex) || [])[1];
             const varianFisik = (fisik.match(varianRegex) || [])[1];
             if (varianDok && varianFisik && varianDok !== varianFisik) return false;
-            const dokClean = dok.replace(/\s/g, '');
-            const fisikClean = fisik.replace(/\s/g, '');
-            if (!dokClean || !fisikClean) return false;
-            let dokChars = dokClean.split('').filter(c => c.match(/[A-Z0-9]/));
-            let fisikChars = fisikClean.split('').filter(c => c.match(/[A-Z0-9]/));
-            if (fisikChars.length === 0) return false;
+            
+            // 3. Token-based comparison
+            const tokDok = dok.split(' ').filter(t => t.length > 0);
+            const tokFisik = fisik.split(' ').filter(t => t.length > 0);
+            if (tokFisik.length === 0) return false;
+            
             let matchCount = 0;
-            let dokCopy = [...dokChars];
-            for (let char of fisikChars) {
-                const idx = dokCopy.indexOf(char);
+            const dokCopy = [...tokDok];
+            for (const tFisik of tokFisik) {
+                let idx = dokCopy.findIndex(tDok => tDok === tFisik);
+                if (idx === -1 && tFisik.length >= 2) {
+                    idx = dokCopy.findIndex(tDok => tDok.includes(tFisik) || tFisik.includes(tDok));
+                }
                 if (idx !== -1) { matchCount++; dokCopy.splice(idx, 1); }
             }
-            return (matchCount / fisikChars.length) >= 0.60;
+            return (matchCount / tokFisik.length) >= 0.75;
         }
 
         // ============================================================
@@ -717,6 +749,7 @@
             const region = getRegion(merk);
             const isAsia = region === 'asia';
 
+            // --- CEK TAHUN RANGKA ---
             let tahunRangka = null, kodeTahunVIN = null, statusVIN = 'unknown', mappingVIN = null;
             if (isAsia) {
                 const vinResult = parseYearFromVIN(noRangka, tahun);
@@ -731,6 +764,7 @@
                 if (Math.abs(tahun - tahunRangka) > 2) { tahunValid = false; tahunMismatch = true; }
             }
 
+            // --- CEK CC ---
             const ccExcelRaw = row['CC'];
             let ccExcel = null;
             if (ccExcelRaw !== undefined && ccExcelRaw !== null && ccExcelRaw !== '') {
@@ -739,6 +773,9 @@
             }
 
             const ccFisik = extractCC(modelFisik);
+            const literFisik = extractLiter(modelFisik);
+            const literDok = extractLiter(modelDok);
+
             let ccStatus = 'unknown';
             let ccSelisih = null;
             let ccDisplay = '—';
@@ -750,14 +787,16 @@
                     ccStatus = 'partial';
                     ccDisplay = ccExcel === 0 ? `0 vs ${ccFisik}cc` : `${ccFisik} vs 0cc`;
                     ccSumber = 'Ada nilai 0';
-                } else if (ccSelisih <= 100) {
+                } else if (ccSelisih <= CC_TOLERANCE) {
+                    // ✅ Toleransi 50 cc — cukup untuk pembulatan liter
                     ccStatus = 'sama';
                     ccDisplay = `${ccFisik}cc`;
                     ccSumber = 'Excel vs Fisik';
                 } else {
+                    // ❌ Selisih > 50 cc → salah input / mesin beda
                     ccStatus = 'beda';
                     ccDisplay = `${ccExcel}≠${ccFisik}cc`;
-                    ccSumber = 'Excel vs Fisik';
+                    ccSumber = `Δ${ccSelisih}cc`;
                 }
             } else if (ccFisik !== null) {
                 ccStatus = 'partial'; ccDisplay = `${ccFisik}cc`; ccSumber = 'Hanya Fisik';
@@ -765,8 +804,27 @@
                 ccStatus = 'partial'; ccDisplay = `${ccExcel}cc`; ccSumber = 'Hanya Excel';
             }
 
-            const tipeSama = isTipeSamaMurni(modelDok, modelFisik);
+            // --- CEK TIPE ---
+            let tipeSama = isTipeSamaMurni(modelDok, modelFisik);
 
+            // Tambahan: Cek konsistensi liter di model vs CC Excel
+            // Kalau Excel CC = 2494, tapi model tertulis "2.4" → tidak konsisten
+            if (tipeSama && ccExcel !== null && ccExcel > 0 && literFisik !== null) {
+                const ccFromLiterFisik = Math.round(literFisik * 1000);
+                if (Math.abs(ccFromLiterFisik - ccExcel) > CC_TOLERANCE) {
+                    // Contoh: Excel 2494 vs liter fisik 2.4 (2400) → selisih 94 > 50
+                    // Artinya salah satu salah: entah CC di Excel, atau liter di model fisik
+                    tipeSama = false;
+                }
+            }
+            if (tipeSama && ccExcel !== null && ccExcel > 0 && literDok !== null) {
+                const ccFromLiterDok = Math.round(literDok * 1000);
+                if (Math.abs(ccFromLiterDok - ccExcel) > CC_TOLERANCE) {
+                    tipeSama = false;
+                }
+            }
+
+            // --- CEK NAMA STNK vs BPKB ---
             let namaSama = true, namaKosong = false;
             if (!namaSTNK && !namaBPKB) { namaKosong = true; namaSama = true; }
             else if (namaSTNK && namaBPKB) { namaSama = namaSTNK.toLowerCase() === namaBPKB.toLowerCase(); }
@@ -780,6 +838,7 @@
             const transSama = transResult.status === 'sama';
             const transDetail = transResult.detail;
 
+            // --- HITUNG ANOMALI ---
             let anomali = false, reasons = [];
             if (isAsia && tahunMismatch) { anomali = true; reasons.push(`Tahun mismatch (${tahun} vs ${tahunRangka})`); }
             if (!tipeSama && modelDok && modelFisik) { anomali = true; reasons.push('Tipe berbeda'); }
@@ -790,6 +849,7 @@
             }
             if (!transSama && transResult.status !== 'unknown') { anomali = true; reasons.push(`Transmisi: ${transDetail}`); }
 
+            // Kategori BBM
             let fuelKategori = 'unknown';
             if (fuelTypeExcel) {
                 const lower = fuelTypeExcel.toLowerCase();
@@ -885,7 +945,6 @@
 
             sortData();
 
-            // Kalau ada nopolQ, taruh exact match di atas
             if (nopolQ) {
                 const queryNorm = nopolQ.toUpperCase().replace(/\s/g, '');
                 filteredData.sort((a, b) => {
@@ -915,7 +974,7 @@
             switch (key) {
                 case 'checked': {
                     const checkedList = getCheckedList();
-                    return checkedList[item.nopol] ? 0 : 1; // 1 = belum dicek (prioritas atas)
+                    return checkedList[item.nopol] ? 0 : 1;
                 }
                 case 'anomali':
                     return item.anomali ? 1 : 0;
@@ -959,7 +1018,6 @@
         // MULTI-LEVEL SORTING
         // ============================================================
         function sortData() {
-            // Cek apakah ada kriteria multi-sort yang aktif
             const activeStages = multiSortStages.filter(s => s !== '');
 
             if (activeStages.length > 0) {
@@ -968,13 +1026,11 @@
                         const cmp = compareItems(a, b, stageKey);
                         if (cmp !== 0) return cmp;
                     }
-                    // Tie-breaker akhir: LOT
                     return (a.lot || '').localeCompare(b.lot || '', undefined, { numeric: true });
                 });
                 return;
             }
 
-            // Kalau tidak ada multi-sort, pakai sort 1 kolom via header
             const key = sortKey;
             if (isSeverityColumn(key)) {
                 filteredData.sort((a, b) => {
@@ -1009,16 +1065,13 @@
             });
         }
 
-        // Fungsi compare untuk 1 kriteria
         function compareItems(a, b, key) {
-            // Kolom severity (skor tinggi = prioritas atas)
             if (isSeverityColumn(key)) {
                 const sevA = getSeverityScore(a, key);
                 const sevB = getSeverityScore(b, key);
-                if (sevA !== sevB) return sevB - sevA; // descending severity
+                if (sevA !== sevB) return sevB - sevA;
                 return 0;
             }
-            // Kolom teks / angka biasa (ascending)
             let va, vb;
             switch (key) {
                 case 'lot': va = a.lot || ''; vb = b.lot || ''; break;
@@ -1173,7 +1226,6 @@
             prevPageBtn.disabled = currentPage <= 1;
             nextPageBtn.disabled = currentPage >= totalPages;
 
-            // Update indikator header (hanya untuk sort 1 kolom, bukan multi)
             const hasMultiSort = multiSortStages.some(s => s !== '');
             document.querySelectorAll('th[data-sort]').forEach(th => {
                 const indicator = th.querySelector('.sort-indicator');
@@ -1215,34 +1267,29 @@
                     tr.classList.remove('row-checked');
                 }
                 updateCheckedStats();
-                // Kalau multi-sort pakai 'checked' atau filter 'check' aktif, render ulang
                 if (checkFilter.value !== 'all' || multiSortStages.includes('checked')) {
                     applyFilters();
                 }
             }
         });
 
-        // Klik header tabel = sort 1 kolom (reset multi-sort)
         tableHead.addEventListener('click', function(e) {
             const th = e.target.closest('th[data-sort]');
             if (!th) return;
             sortKey = th.dataset.sort;
-            // Reset multi-sort supaya user tahu ini mode 1 kolom
             multiSortStages = ['', '', '', ''];
             document.querySelectorAll('.sort-stage-select').forEach(sel => sel.value = '');
             applyFilters();
         });
 
-        // Event listener untuk dropdown multi-sort
         document.querySelectorAll('.sort-stage-select').forEach(sel => {
             sel.addEventListener('change', function() {
-                const stage = parseInt(this.dataset.stage) - 1; // 0-3
+                const stage = parseInt(this.dataset.stage) - 1;
                 multiSortStages[stage] = this.value;
                 applyFilters();
             });
         });
 
-        // Reset multi-sort
         btnResetSort.addEventListener('click', function() {
             multiSortStages = ['', '', '', ''];
             document.querySelectorAll('.sort-stage-select').forEach(sel => sel.value = '');
